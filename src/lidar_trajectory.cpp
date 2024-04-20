@@ -25,8 +25,7 @@ LidarTrajectory::LidarTrajectory()
 
 int64_t LidarTrajectory::foo(int64_t bar) const
 {
-  std::cout << "Hello World, " << bar << std::endl;
+  std::cout << "Hello World, " << bar << std::endl; 
   return bar;
 }
-
 }  // namespace lidar_trajectory

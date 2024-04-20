@@ -32,6 +32,11 @@ def launch_setup(context, *args, **kwargs):
         package='lidar_trajectory',
         executable='lidar_trajectory_node_exe',
         name='lidar_trajectory_node',
+        remappings=[
+            ('~/input/current_odometry', '/localization/kinematic_state'),
+            ('~/input/laser_scan', '/sensing/lidar/scan'),
+            ('~/output/trajectory', '/planning/racing_planner/dummy_topic'),
+        ],
         parameters=[
             param_path
         ],

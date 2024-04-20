@@ -32,6 +32,8 @@ public:
 private:
   LidarTrajectoryPtr lidar_trajectory_{nullptr};
   int64_t param_name_{123};
+  rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr subscription_lidar_scan_;
+  void lidar_scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg) const;
 };
 }  // namespace lidar_trajectory
 

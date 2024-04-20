@@ -18,6 +18,7 @@
 #include <cstdint>
 
 #include "lidar_trajectory/visibility_control.hpp"
+#include "sensor_msgs/msg/laser_scan.hpp"
 
 
 namespace lidar_trajectory
@@ -29,7 +30,6 @@ public:
   LidarTrajectory();
   int64_t foo(int64_t bar) const;
 };
-
 }  // namespace lidar_trajectory
 
 #endif  // LIDAR_TRAJECTORY__LIDAR_TRAJECTORY_HPP_

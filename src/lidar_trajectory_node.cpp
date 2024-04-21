@@ -21,6 +21,7 @@ LidarTrajectoryNode::LidarTrajectoryNode(const rclcpp::NodeOptions & options)
 :  Node("lidar_trajectory", options)
 {
   lidar_trajectory_ = std::make_unique<lidar_trajectory::LidarTrajectory>();
+
   auto qos_policy = rclcpp::QoS(1);
   qos_policy.best_effort();
   
@@ -38,21 +39,20 @@ LidarTrajectoryNode::LidarTrajectoryNode(const rclcpp::NodeOptions & options)
 
 void LidarTrajectoryNode::lidar_scan_callback(const LaserScan::SharedPtr msg) const
 {
-  LaserScan::SharedPtr a = msg;
-  std::cout << "Reading laser scan" << std::endl;
+  // std::cout << "Reading laser scan" << std::endl;
+  this->lidar_trajectory_->laser_scan = std::make_shared<LaserScan>(*msg);
 }
 
 void LidarTrajectoryNode::odometry_callback(const Odometry::SharedPtr msg) const
 {
-  Odometry::SharedPtr a = msg;
-  std::cout << "Reading odometry" << std::endl;
+  // std::cout << "Reading odometry" << std::endl;
+  this->lidar_trajectory_->odometry = std::make_shared<Odometry>(*msg);
 }
 
 void LidarTrajectoryNode::on_timer()
 {
-  Trajectory trajectory;
-
-  std::cout << "Publish trajectory" << std::endl;
+  // std::cout << "Publish trajectory" << std::endl;
+  Trajectory trajectory = this->lidar_trajectory_->calculate_trajectory();
 
   trajectory.header.stamp = this->now();
   publisher_trajectory_->publish(trajectory);

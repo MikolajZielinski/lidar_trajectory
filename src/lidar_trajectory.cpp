@@ -21,11 +21,26 @@ namespace lidar_trajectory
 
 LidarTrajectory::LidarTrajectory()
 {
+  laser_scan = nullptr;
+  odometry = nullptr;
 }
 
 int64_t LidarTrajectory::foo(int64_t bar) const
 {
   std::cout << "Hello World, " << bar << std::endl; 
   return bar;
+}
+
+Trajectory LidarTrajectory::calculate_trajectory(void)
+{
+  Trajectory trajectory;
+
+  std::cout << "Calcualting trajectory" << std::endl;
+  if(this->laser_scan != nullptr && this->odometry != nullptr)
+  {
+    std::cout << "Calcualted trajectory" << std::endl;
+  }
+
+  return trajectory;
 }
 }  // namespace lidar_trajectory

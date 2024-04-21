@@ -19,14 +19,30 @@
 
 #include "lidar_trajectory/visibility_control.hpp"
 
+#include <autoware_auto_planning_msgs/msg/trajectory.hpp>
+#include <autoware_auto_planning_msgs/msg/trajectory_point.hpp>
+#include "sensor_msgs/msg/laser_scan.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+#include "geometry_msgs/msg/pose_with_covariance.hpp"
+#include "geometry_msgs/msg/twist_with_covariance.hpp"
 
 namespace lidar_trajectory
 {
+using sensor_msgs::msg::LaserScan;
+using nav_msgs::msg::Odometry;
+using autoware_auto_planning_msgs::msg::Trajectory;
+using autoware_auto_planning_msgs::msg::TrajectoryPoint;
 
 class LIDAR_TRAJECTORY_PUBLIC LidarTrajectory
 {
 public:
   LidarTrajectory();
+
+  LaserScan::SharedPtr laser_scan;
+  Odometry::SharedPtr odometry;
+
+  Trajectory calculate_trajectory(void);
+
   int64_t foo(int64_t bar) const;
 };
 }  // namespace lidar_trajectory

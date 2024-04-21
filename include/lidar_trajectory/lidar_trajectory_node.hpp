@@ -20,6 +20,9 @@
 
 #include "lidar_trajectory/lidar_trajectory.hpp"
 
+#include "sensor_msgs/msg/laser_scan.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+
 namespace lidar_trajectory
 {
 using LidarTrajectoryPtr = std::unique_ptr<lidar_trajectory::LidarTrajectory>;
@@ -33,7 +36,9 @@ private:
   LidarTrajectoryPtr lidar_trajectory_{nullptr};
   int64_t param_name_{123};
   rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr subscription_lidar_scan_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr subscription_odometry_;
   void lidar_scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg) const;
+  void odometry_callback(const nav_msgs::msg::Odometry::SharedPtr msg) const;
 };
 }  // namespace lidar_trajectory
 

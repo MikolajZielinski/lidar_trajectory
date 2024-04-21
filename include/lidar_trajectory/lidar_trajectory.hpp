@@ -18,7 +18,6 @@
 #include <cstdint>
 
 #include "lidar_trajectory/visibility_control.hpp"
-#include "sensor_msgs/msg/laser_scan.hpp"
 
 
 namespace lidar_trajectory

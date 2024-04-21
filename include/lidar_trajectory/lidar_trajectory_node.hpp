@@ -15,17 +15,25 @@
 #ifndef LIDAR_TRAJECTORY__LIDAR_TRAJECTORY_NODE_HPP_
 #define LIDAR_TRAJECTORY__LIDAR_TRAJECTORY_NODE_HPP_
 
+#include <chrono>
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
 
 #include "lidar_trajectory/lidar_trajectory.hpp"
 
+#include <autoware_auto_planning_msgs/msg/trajectory.hpp>
+#include <autoware_auto_planning_msgs/msg/trajectory_point.hpp>
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 
 namespace lidar_trajectory
 {
+using namespace std::chrono_literals;
 using LidarTrajectoryPtr = std::unique_ptr<lidar_trajectory::LidarTrajectory>;
+using sensor_msgs::msg::LaserScan;
+using nav_msgs::msg::Odometry;
+using autoware_auto_planning_msgs::msg::Trajectory;
+using autoware_auto_planning_msgs::msg::TrajectoryPoint;
 
 class LIDAR_TRAJECTORY_PUBLIC LidarTrajectoryNode : public rclcpp::Node
 {
@@ -35,10 +43,16 @@ public:
 private:
   LidarTrajectoryPtr lidar_trajectory_{nullptr};
   int64_t param_name_{123};
-  rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr subscription_lidar_scan_;
-  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr subscription_odometry_;
-  void lidar_scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg) const;
-  void odometry_callback(const nav_msgs::msg::Odometry::SharedPtr msg) const;
+
+  rclcpp::Subscription<LaserScan>::SharedPtr subscription_lidar_scan_;
+  rclcpp::Subscription<Odometry>::SharedPtr subscription_odometry_;
+
+  rclcpp::Publisher<Trajectory>::SharedPtr publisher_trajectory_;
+  rclcpp::TimerBase::SharedPtr timer_;
+
+  void lidar_scan_callback(const LaserScan::SharedPtr msg) const;
+  void odometry_callback(const Odometry::SharedPtr msg) const;
+  void on_timer();
 };
 }  // namespace lidar_trajectory
 

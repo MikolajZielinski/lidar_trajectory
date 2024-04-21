@@ -23,24 +23,39 @@ LidarTrajectoryNode::LidarTrajectoryNode(const rclcpp::NodeOptions & options)
   lidar_trajectory_ = std::make_unique<lidar_trajectory::LidarTrajectory>();
   auto qos_policy = rclcpp::QoS(1);
   qos_policy.best_effort();
-  subscription_lidar_scan_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
+  
+  subscription_lidar_scan_ = this->create_subscription<LaserScan>(
       "~/input/laser_scan", qos_policy, std::bind(&LidarTrajectoryNode::lidar_scan_callback, this, std::placeholders::_1));
-  subscription_odometry_ = this->create_subscription<nav_msgs::msg::Odometry>(
+  subscription_odometry_ = this->create_subscription<Odometry>(
       "~/input/current_odometry", qos_policy, std::bind(&LidarTrajectoryNode::odometry_callback, this, std::placeholders::_1));
+
+  publisher_trajectory_ = this->create_publisher<Trajectory>("~/output/trajectory", qos_policy);
+  timer_ = this->create_wall_timer(500ms, std::bind(&LidarTrajectoryNode::on_timer, this));
+
   param_name_ = this->declare_parameter("param_name", 456);
   lidar_trajectory_->foo(param_name_);
 }
 
-void LidarTrajectoryNode::lidar_scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg) const
+void LidarTrajectoryNode::lidar_scan_callback(const LaserScan::SharedPtr msg) const
 {
-  sensor_msgs::msg::LaserScan::SharedPtr a = msg;
+  LaserScan::SharedPtr a = msg;
   std::cout << "Reading laser scan" << std::endl;
 }
 
-void LidarTrajectoryNode::odometry_callback(const nav_msgs::msg::Odometry::SharedPtr msg) const
+void LidarTrajectoryNode::odometry_callback(const Odometry::SharedPtr msg) const
 {
-  nav_msgs::msg::Odometry::SharedPtr a = msg;
+  Odometry::SharedPtr a = msg;
   std::cout << "Reading odometry" << std::endl;
+}
+
+void LidarTrajectoryNode::on_timer()
+{
+  Trajectory trajectory;
+
+  std::cout << "Publish trajectory" << std::endl;
+
+  trajectory.header.stamp = this->now();
+  publisher_trajectory_->publish(trajectory);
 }
 
 }  // namespace lidar_trajectory

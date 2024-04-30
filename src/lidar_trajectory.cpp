@@ -15,6 +15,7 @@
 #include "lidar_trajectory/lidar_trajectory.hpp"
 
 #include <math.h>
+#include <cmath>
 #include <iostream>
 #include <vector>
 
@@ -76,9 +77,51 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     }
   }
 
+  class LineSegment
+  {
+    public:
+      std::vector<double> point;
+      double distance;
+  };
+
+  // Create point sections 
+  std::vector<std::vector<LineSegment>> line_sections;
+  std::vector<LineSegment> line_subsection;
+  float threshold = 0.3;
+  for(int i=0; i<int(coords.size()); i++)
+  {
+    int j = i + 1;
+
+    if(j == int(coords.size()))
+    {
+      if(int(line_subsection.size()) > 10)
+      {
+        line_sections.push_back(line_subsection);
+      }
+      break;
+    }
+
+    double points_dist = std::hypot(coords[i][0] - coords[j][0], coords[i][1] - coords[j][1]);
+    if(points_dist < threshold)
+    {
+      LineSegment segment;
+      segment.point = coords[i];
+      segment.distance = points_dist;
+      line_subsection.push_back(segment);
+    }
+    else
+    {
+      if (int(line_subsection.size()) > 10)
+      {
+        line_sections.push_back(line_subsection);
+      }
+      line_subsection.clear();
+    }
+  }
+
   // Print out the vector
-  for(auto n : coords)
-    std::cout << n[0] << " " << n[1] << " | ";
+  for(auto n : line_sections)
+    std::cout << int(n.size()) << " " << n[0].distance << " " << n[1].distance << " | ";
   std::cout << std::endl;
 
   return trajectory;

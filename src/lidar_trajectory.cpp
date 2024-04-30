@@ -119,9 +119,33 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     }
   }
 
+  // Reduce number of points on a section
+  std::vector<std::vector<std::vector<double>>> line_sections_reduced;
+  for(std::vector<LineSegment> line_sub : line_sections)
+  {
+    double distance = 0;
+    std::vector<std::vector<double>> line_subsection_reduced;
+    for(LineSegment line_seg : line_sub)
+    {
+      distance += line_seg.distance;
+
+      if(distance >= 0.3)
+      {
+        distance = 0;
+        line_subsection_reduced.push_back(line_seg.point);
+      }
+    }
+
+    if(int(line_subsection_reduced.size()) > 1)
+    {
+      line_subsection_reduced.insert(line_subsection_reduced.begin(), line_sub[0].point);
+      line_sections_reduced.push_back(line_subsection_reduced);
+    }
+  }
+
   // Print out the vector
-  for(auto n : line_sections)
-    std::cout << int(n.size()) << " " << n[0].distance << " " << n[1].distance << " | ";
+  for(auto n : line_sections_reduced)
+    std::cout << int(n.size()) << " " << n[0][0] << " " << n[0][1] << " | "  << n[1][0] << " " << n[1][1] << " | "  << n[2][0] << " " << n[2][1] << " | ";
   std::cout << std::endl;
 
   return trajectory;

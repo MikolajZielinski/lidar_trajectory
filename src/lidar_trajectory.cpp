@@ -16,6 +16,7 @@
 
 #include <math.h>
 #include <cmath>
+#include <algorithm>
 #include <iostream>
 #include <vector>
 
@@ -81,7 +82,7 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
   {
     public:
       std::vector<double> point;
-      double distance;
+      double value;
   };
 
   // Create point sections 
@@ -106,7 +107,7 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     {
       LineSegment segment;
       segment.point = coords[i];
-      segment.distance = points_dist;
+      segment.value = points_dist;
       line_subsection.push_back(segment);
     }
     else
@@ -127,7 +128,7 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     std::vector<std::vector<double>> line_subsection_reduced;
     for(LineSegment line_seg : line_sub)
     {
-      distance += line_seg.distance;
+      distance += line_seg.value;
 
       if(distance >= 0.3)
       {
@@ -204,9 +205,61 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     }
   }
 
+  // Connect edges
+  double x0 = start_point[0];
+  double y0 = start_point[1];
+  std::vector<LineSegment> perimeter_points;
+  for(int i=0; i<int(no_inter_sections.size()); i++)
+  {
+    std::vector<std::vector<double>> no_inter_sub = no_inter_sections[i];
+    double x1 = no_inter_sub[0][0];
+    double y1 = no_inter_sub[0][1];
+    double x2 = no_inter_sub.back()[0];
+    double y2 = no_inter_sub.back()[1];
+    double xd = start_direction[0];
+    double yd = start_direction[1];
+    yd = -yd;
+    
+    double d1 = xd / std::hypot(xd, yd);
+    double d2 = xd / std::hypot(xd, yd);
+    double d3 = (x1 - x0) / std::hypot(x1 - x0, y1 - y0);
+    double d4 = (y1 - y0) / std::hypot(x1 - x0, y1 - y0);
+    double d5 = (x2 - x0) / std::hypot(x2 - x0, y2 - y0);
+    double d6 = (y2 - y0) / std::hypot(x2 - x0, y2 - y0);
+
+    // Add points only in front ot the vehicle
+    double dot1 = (d1 * d3) + (d2 * d4);
+    double dot2 = (d1 * d5) + (d2 * d6);
+    double angle1 = (acos(std::min(std::max(dot1, -1.0), 1.0))) * (180.0 / M_PI);
+    double angle2 = (acos(std::min(std::max(dot2, -1.0), 1.0))) * (180.0 / M_PI);
+
+    if(angle1 <= 110)
+    {
+      LineSegment seg;
+      seg.point = {x1, y1};
+      seg.value = i;
+      perimeter_points.push_back(seg);
+    }
+
+    if(angle2 <= 110)
+    {
+      LineSegment seg;
+      seg.point = {x2, y2};
+      seg.value = i;
+      perimeter_points.push_back(seg);
+    }
+  }
+  if(int(perimeter_points.size()) == 0)
+  {
+    LineSegment seg;
+    seg.point = no_inter_sections[0].back();
+    seg.value = 0;
+    perimeter_points.push_back(seg);
+  }
+
   // Print out the vector
-  for(auto n : no_inter_sections)
-    std::cout << int(n.size()) << " " << n[0][0] << " " << n[0][1] << " | "  << n[1][0] << " " << n[1][1] << " | "  << n[2][0] << " " << n[2][1] << " | ";
+  for(auto n : perimeter_points)
+    std::cout << int(perimeter_points.size()) << " " << n.point[0] << " " << n.point[1] << " | "  << n.point[0] << " " << n.point[1] << " | "  << n.point[0] << " " << n.point[1] << " | ";
   std::cout << std::endl;
 
   return trajectory;

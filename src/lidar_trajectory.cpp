@@ -143,8 +143,33 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     }
   }
 
+  // Calculate normal vectors
+  float distance_from_border = 0.8;
+  std::vector<std::vector<std::vector<double>>> normal_vectors_sections;
+  for(std::vector<std::vector<double>> line_sub_red : line_sections_reduced)
+  {
+    std::vector<std::vector<double>> normal_vectors_subsections;
+    for(int i=0; i<int(line_sub_red.size() - 1); i++)
+    {
+      double x1 = line_sub_red[i][0];
+      double y1 = line_sub_red[i][1];
+      double x2 = line_sub_red[i + 1][0];
+      double y2 = line_sub_red[i + 1][1];
+
+      double nx = (y2 - y1);
+      double ny = -(x2 - x1);
+
+      double n_x = nx / std::hypot(nx, ny) * distance_from_border;
+      double n_y = ny / std::hypot(nx, ny) * distance_from_border;
+
+      std::vector<double> point = {n_x + x1, n_y + y1};
+      normal_vectors_subsections.push_back(point);
+    }
+    normal_vectors_sections.push_back(normal_vectors_subsections);
+  }
+
   // Print out the vector
-  for(auto n : line_sections_reduced)
+  for(auto n : normal_vectors_sections)
     std::cout << int(n.size()) << " " << n[0][0] << " " << n[0][1] << " | "  << n[1][0] << " " << n[1][1] << " | "  << n[2][0] << " " << n[2][1] << " | ";
   std::cout << std::endl;
 

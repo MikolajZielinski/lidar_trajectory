@@ -168,8 +168,44 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     normal_vectors_sections.push_back(normal_vectors_subsections);
   }
 
+  // Check if normal vectors are intersecting each other and remove them
+  std::vector<std::vector<std::vector<double>>> no_inter_sections;
+  for(int i=0; i<int(line_sections_reduced.size()); i++)
+  {
+    std::vector<std::vector<double>> line_sub_red = line_sections_reduced[i];
+    std::vector<std::vector<double>> norm_sub = normal_vectors_sections[i];
+    std::vector<std::vector<double>> no_inter_subsections;
+
+    for(int j=0; j<int(norm_sub.size() - 1); j++)
+    {
+      double x1 = line_sub_red[j][0];
+      double y1 = line_sub_red[j][1];
+      double x2 = norm_sub[j][0];
+      double y2 = norm_sub[j][1];
+      double x3 = line_sub_red[j + 1][0];
+      double y3 = line_sub_red[j + 1][1];
+      double x4 = norm_sub[j + 1][0];
+      double y4 = norm_sub[j + 1][1];
+
+      if(((x1 < x3 && x2 > x4) || (x1 > x3 && x2 < x4)) || ((y1 < y3 && y2 > y4) || (y1 > y3 && y2 < y4)))
+      {
+
+      }
+      else
+      {
+        no_inter_subsections.push_back(norm_sub[j]);
+      }
+    }
+    no_inter_subsections.push_back(norm_sub.back());
+
+    if(int(no_inter_subsections.size()) > 1)
+    {
+      no_inter_sections.push_back(no_inter_subsections);
+    }
+  }
+
   // Print out the vector
-  for(auto n : normal_vectors_sections)
+  for(auto n : no_inter_sections)
     std::cout << int(n.size()) << " " << n[0][0] << " " << n[0][1] << " | "  << n[1][0] << " " << n[1][1] << " | "  << n[2][0] << " " << n[2][1] << " | ";
   std::cout << std::endl;
 

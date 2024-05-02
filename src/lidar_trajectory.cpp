@@ -297,9 +297,34 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     biggest_perimeter_points = perimeter_points;
   }
 
+  // Choose closest path as first path
+  x0 = start_point[0];
+  y0 = start_point[1];
+  std::vector<std::vector<double>> turn_right_sections = no_inter_sections[0];
+  for(std::vector<std::vector<double>> section : no_inter_sections)
+  {
+    double smallest_dist = 1e9;
+    for(std::vector<double> point : section)
+    {
+      double x1 = point[0];
+      double y1 = point[1];
+      double dist = std::hypot(x1 - x0, y1 - y0);
+
+      if(dist < smallest_dist)
+      {
+        smallest_dist = dist;
+      }
+    }
+    if(smallest_dist < 1.0)
+    {
+      turn_right_sections = section;
+      break;
+    }
+  }
+
   // Print out the vector
-  for(auto n : biggest_perimeter_points)
-    std::cout << int(perimeter_points.size()) << " " << n.point[0] << " " << n.point[1] << " | "  << n.point[0] << " " << n.point[1] << " | "  << n.point[0] << " " << n.point[1] << " | ";
+  for(auto n : turn_right_sections)
+    std::cout << int(turn_right_sections.size()) << " " << n[0] << " " << n[1] << " | ";
   std::cout << std::endl;
 
   return trajectory;

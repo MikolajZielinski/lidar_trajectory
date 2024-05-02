@@ -322,6 +322,58 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     }
   }
 
+  // Turn right path
+  if(biggest_perimeter_points[0].value != 0)
+  {
+    std::vector<std::vector<double>> section_to_add = no_inter_sections[int(biggest_perimeter_points[0].value)];
+      
+    if(biggest_perimeter_points[0].point[0] == section_to_add[0][0] && biggest_perimeter_points[0].point[1] == section_to_add[0][1])
+    {
+      std::reverse(section_to_add.begin(), section_to_add.end());
+    }
+
+    double smallest_dist = 1e9;
+    int smallest_idx1 = int(turn_right_sections.size());
+    int smallest_idx2 = int(section_to_add.size());
+
+    for(int i=0; i<int(turn_right_sections.size()); i++)
+    {
+      std::vector<double> point1 = turn_right_sections[i];
+      double xp1 = point1[0];
+      double yp1 = point1[1];
+
+      for(int j=0; j<int(section_to_add.size()); j++)
+      {
+        std::vector<double> point2 = section_to_add[j];
+        double xp2 = point2[0];
+        double yp2 = point2[1];
+
+        double dist = std::hypot(xp1 - xp2, yp1 - yp2);
+
+        if(dist < smallest_dist)
+        {
+          smallest_dist = dist;
+
+          if(smallest_idx2 == 0)
+          {
+            smallest_idx2 = 1;
+          }
+          else
+          {
+            smallest_idx1 = i;
+            smallest_idx2 = j;
+          }
+        }
+      }
+    }
+    turn_right_sections = std::vector<std::vector<double>>(turn_right_sections.begin(), turn_right_sections.end() - (int(turn_right_sections.size()) - smallest_idx1));
+    section_to_add = std::vector<std::vector<double>>(section_to_add.begin() + smallest_idx2, section_to_add.end());
+    for(std::vector<double> point : section_to_add)
+    {
+      turn_right_sections.push_back(point);
+    }
+  }
+      
   // Print out the vector
   for(auto n : turn_right_sections)
     std::cout << int(turn_right_sections.size()) << " " << n[0] << " " << n[1] << " | ";

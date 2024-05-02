@@ -257,8 +257,48 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     perimeter_points.push_back(seg);
   }
 
+  // Find biggest traingle
+  x0 = start_point[0];
+  y0 = start_point[1];
+  std::vector<LineSegment> biggest_perimeter_points;
+  float biggest_perimeter = 0.0;
+  if(int(perimeter_points.size()) > 1)
+  {
+    for(LineSegment point1 : perimeter_points)
+    {
+      for(LineSegment point2 : perimeter_points)
+      {
+        if(point1.point[0] == point2.point[0] && point1.point[1] == point2.point[1])
+        {
+          continue;
+        }
+
+        double x1 = point1.point[0];
+        double y1 = point1.point[1];
+        x1 = x1 - x0;
+        y1 = y1 - y0;
+        double x2 = point2.point[0];
+        double y2 = point2.point[1];
+        x2 = x2 - x0;
+        y2 = y2 - y0;
+
+        double perimeter = std::hypot(x1, y1) + std::hypot(x2, y2) + std::hypot(x1 - x2, y1 - y2);
+
+        if(perimeter > biggest_perimeter)
+        {
+          biggest_perimeter = perimeter;
+          biggest_perimeter_points = {point1, point2};
+        }
+      }
+    }
+  }
+  else
+  {
+    biggest_perimeter_points = perimeter_points;
+  }
+
   // Print out the vector
-  for(auto n : perimeter_points)
+  for(auto n : biggest_perimeter_points)
     std::cout << int(perimeter_points.size()) << " " << n.point[0] << " " << n.point[1] << " | "  << n.point[0] << " " << n.point[1] << " | "  << n.point[0] << " " << n.point[1] << " | ";
   std::cout << std::endl;
 

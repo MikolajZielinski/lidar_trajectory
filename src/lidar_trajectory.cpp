@@ -373,12 +373,115 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
       turn_right_sections.push_back(point);
     }
   }
+
+  // Smooth trajectory with Bezier curve
+  std::vector<std::vector<double>> curve = LidarTrajectory::bezier_curve(turn_right_sections, 10);
       
   // Print out the vector
-  for(auto n : turn_right_sections)
-    std::cout << int(turn_right_sections.size()) << " " << n[0] << " " << n[1] << " | ";
+  for(auto n : curve)
+    std::cout << " " << n[0] << " " << n[1] << " | ";
   std::cout << std::endl;
 
   return trajectory;
 }
+
+unsigned long long LidarTrajectory::comb(unsigned n, unsigned i)
+{
+  if (n == i || i == 0) {
+      return 1;
+  }
+  return comb(n - 1, i - 1) * n / i;
+}
+
+std::vector<double> LidarTrajectory::bernstein_poly(int i, int n, std::vector<double> t)
+{
+  unsigned long long term1 = LidarTrajectory::comb(n, i);
+  std::vector<double> term2;
+
+  for(double val : t)
+  {
+    term2.push_back(std::pow(val, n - i));
+  }
+
+  std::vector<double> term3;
+
+  for(double val : t)
+  {
+    term3.push_back(std::pow(1 - val, i));
+  }
+
+  std::vector<double> result;
+  for(int i=0; i<int(term2.size()); i++)
+  {
+    result.push_back(term1 * term2[i] * term3[i]);
+  }
+
+  return result;
+}
+
+std::vector<std::vector<double>> LidarTrajectory::bezier_curve(std::vector<std::vector<double>> points, int nTimes)
+{
+  int nPoints = int(points.size());
+
+  std::vector<double> xPoints;
+  std::vector<double> yPoints;
+  for(std::vector<double> point : points)
+  {
+    xPoints.push_back(point[0]);
+    yPoints.push_back(point[1]);
+  }
+
+  std::vector<double> t;
+  double delta = 1.0 / (nTimes - 1);
+  for(int i=0; i < nTimes-1; ++i)
+    {
+      t.push_back(delta * i);
+    }
+  t.push_back(1.0);
+
+  std::vector<std::vector<double>> polynomial_array;
+  for(int i=0; i<nPoints; i++)
+  {
+    polynomial_array.push_back(LidarTrajectory::bernstein_poly(i, nPoints - 1, t));
+  }
+
+  std::vector<double> xvals;
+  for(std::vector<double> values : polynomial_array)
+  {
+    double sum = 0;
+    for(int i=0; i<nPoints; i++)
+    {
+      sum = sum + (xPoints[i] * values[i]);
+    }
+    xvals.push_back(sum);
+  }
+
+  std::vector<double> yvals;
+  for(std::vector<double> values : polynomial_array)
+  {
+    double sum = 0;
+    for(int i=0; i<nPoints; i++)
+    {
+      sum = sum + (yPoints[i] * values[i]);
+    }
+    yvals.push_back(sum);
+  }
+  
+  std::vector<std::vector<double>> result;
+  for(int i=0; i<nTimes; i++)
+  {
+    std::vector<double> point = {xvals[i], yvals[i]};
+    result.push_back(point);
+  }
+
+  std::cout << "xPoints" << std::endl;
+  for(auto a : xPoints)
+  {
+    std::cout << a << '|';
+  }
+  std::cout << std::endl;
+
+  return result;
+}
+
 }  // namespace lidar_trajectory

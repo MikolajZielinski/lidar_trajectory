@@ -446,23 +446,23 @@ std::vector<std::vector<double>> LidarTrajectory::bezier_curve(std::vector<std::
   }
 
   std::vector<double> xvals;
-  for(std::vector<double> values : polynomial_array)
+  for(int i=0; i<nPoints; i++)
   {
     double sum = 0;
-    for(int i=0; i<nPoints; i++)
+    for(int j=0; j<nPoints; j++)
     {
-      sum = sum + (xPoints[i] * values[i]);
+      sum = sum + (xPoints[j] * polynomial_array[j][i]);
     }
     xvals.push_back(sum);
   }
 
   std::vector<double> yvals;
-  for(std::vector<double> values : polynomial_array)
+  for(int i=0; i<nPoints; i++)
   {
     double sum = 0;
-    for(int i=0; i<nPoints; i++)
+    for(int j=0; j<nPoints; j++)
     {
-      sum = sum + (yPoints[i] * values[i]);
+      sum = sum + (yPoints[j] * polynomial_array[j][i]);
     }
     yvals.push_back(sum);
   }
@@ -473,13 +473,6 @@ std::vector<std::vector<double>> LidarTrajectory::bezier_curve(std::vector<std::
     std::vector<double> point = {xvals[i], yvals[i]};
     result.push_back(point);
   }
-
-  std::cout << "xPoints" << std::endl;
-  for(auto a : xPoints)
-  {
-    std::cout << a << '|';
-  }
-  std::cout << std::endl;
 
   return result;
 }

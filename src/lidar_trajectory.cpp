@@ -375,15 +375,15 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
   }
 
   // Smooth trajectory with Bezier curve
-  std::vector<std::vector<double>> curve = LidarTrajectory::bezier_curve(turn_right_sections, 100);
+  std::vector<std::vector<double>> path_right = LidarTrajectory::bezier_curve(turn_right_sections, 100);
 
   // Reverse all sections
   std::vector<std::vector<double>> section_turn_left;
   if(int(biggest_perimeter_points.size()) > 0)
   {
-    if(int(no_inter_sections.size()) > biggest_perimeter_points[1].value)
+    if(int(no_inter_sections.size()) > biggest_perimeter_points.back().value)
     {
-      section_turn_left = no_inter_sections[biggest_perimeter_points[1].value];
+      section_turn_left = no_inter_sections[biggest_perimeter_points.back().value];
     }
   }
   for(std::vector<std::vector<double>> &section : no_inter_sections)
@@ -416,9 +416,64 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
       break;
     }
   }
+
+  // Turn left path
+  if(biggest_perimeter_points.back().value != int(no_inter_sections.size()) - 1)
+  {
+    std::vector<std::vector<double>> section_to_add = section_turn_left;
+
+    if(biggest_perimeter_points.back().point[0] == section_to_add[0][0] && biggest_perimeter_points.back().point[1] == section_to_add[0][1])
+    {
+      std::reverse(section_to_add.begin(), section_to_add.end());
+    }
+
+    double smallest_dist = 1e9;
+    double smallest_idx1 = int(turn_left_sections.size());
+    double smallest_idx2 = int(section_to_add.size());
+
+    for(int i=0; i<int(turn_left_sections.size()); i++)
+    {
+      std::vector<double> point1 = turn_left_sections[i];
+      double xp1 = point1[0];
+      double yp1 = point1[1];
+
+      for(int j=0; j<int(section_to_add.size()); j++)
+      {
+        std::vector<double> point2 = section_to_add[j];
+        double xp2 = point2[0];
+        double yp2 = point2[1];
+
+        double dist = std::hypot(xp1 - xp2, yp1 - yp2);
+
+        if(dist < smallest_dist)
+        {
+          smallest_dist = dist;
+
+          if(smallest_idx2 == 0)
+          {
+            smallest_idx2 = 1;
+          }
+          else
+          {
+            smallest_idx1 = i;
+            smallest_idx2 = j;
+          }
+        }
+      }
+    }
+    turn_left_sections = std::vector<std::vector<double>>(turn_left_sections.begin(), turn_left_sections.end() - (int(turn_left_sections.size()) - smallest_idx1));
+    section_to_add = std::vector<std::vector<double>>(section_to_add.begin() + smallest_idx2, section_to_add.end());
+    for(std::vector<double> point : section_to_add)
+    {
+      turn_left_sections.push_back(point);
+    }
+  }
+
+  // Smooth trajectory with Bezier curve
+  std::vector<std::vector<double>> path_left = LidarTrajectory::bezier_curve(turn_left_sections, 10);
       
   // Print out the vector
-  for(auto n : turn_left_sections)
+  for(auto n : path_left)
     std::cout << " " << n[0] << " " << n[1] << " | ";
   std::cout << std::endl;
 

@@ -21,15 +21,23 @@
 
 #include <autoware_auto_planning_msgs/msg/trajectory.hpp>
 #include <autoware_auto_planning_msgs/msg/trajectory_point.hpp>
+#include <tier4_autoware_utils/geometry/geometry.hpp>
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "nav_msgs/msg/odometry.hpp"
+#include "geometry_msgs/msg/pose.hpp"
 #include "geometry_msgs/msg/pose_with_covariance.hpp"
 #include "geometry_msgs/msg/twist_with_covariance.hpp"
+#include "geometry_msgs/msg/quaternion.hpp"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include "tf2/LinearMath/Quaternion.h"
+#include "tf2/LinearMath/Matrix3x3.h"
 
 namespace lidar_trajectory
 {
 using sensor_msgs::msg::LaserScan;
 using nav_msgs::msg::Odometry;
+using geometry_msgs::msg::Quaternion;
+using geometry_msgs::msg::Pose;
 using autoware_auto_planning_msgs::msg::Trajectory;
 using autoware_auto_planning_msgs::msg::TrajectoryPoint;
 

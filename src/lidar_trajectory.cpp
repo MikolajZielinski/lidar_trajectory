@@ -42,7 +42,7 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
   if(this->laser_scan != nullptr && this->odometry != nullptr)
   {
     // Read message data
-    std::cout << "Calcualting trajectory" << std::endl;
+    // std::cout << "Calcualting trajectory" << std::endl;
 
     // Convert quaternion to RPY
     Odometry odom = *this->odometry;
@@ -493,10 +493,10 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     std::reverse(path_left.begin(), path_left.end());
         
     // Print out the vector
-    std::cout << "Path" << std::endl;
-    for(auto n : path_left)
-      std::cout << " " << n[0] << " " << n[1] << " | ";
-    std::cout << std::endl;
+    // std::cout << "Path" << std::endl;
+    // for(auto n : path_left)
+    //   std::cout << " " << n[0] << " " << n[1] << " | ";
+    // std::cout << std::endl;
 
     // Populate the message
     trajectory.header = laser.header;
@@ -507,19 +507,19 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
       Pose pose;
       auto q = tier4_autoware_utils::createQuaternionFromYaw(-M_PI / 2); //TODO Calculate the angle
       pose.position.x = point[0];
-      pose.position.y = point[1];
+      pose.position.y = -point[1];
       pose.position.z = 0.0;
       pose.orientation = q;
 
       trajectory_point.pose = pose;
 
-      trajectory_point.longitudinal_velocity_mps = 1.0; //TODO Better velocity estiomatoin
+      trajectory_point.longitudinal_velocity_mps = 5.167099952697754; //TODO Better velocity estiomatoin
 
       // s_m; x_m; y_m; psi_rad; kappa_radpm; vx_mps; ax_mps2
       // 0.0000000; -0.0097019; -0.5801947; -1.6151808; 0.0188487; 5.1671047; 1.6184687
       trajectory.points.push_back(trajectory_point);
 
-      std::cout << 0.0000000 << "; " << point[0] << "; " << point[1] << "; " << -M_PI / 2 << "; " << 0.0188487 << "; " << 5.1671047 << "; " << 1.6184687 << std::endl;
+      // std::cout << 0.0000000 << "; " << point[0] << "; " << point[1] << "; " << -M_PI / 2 << "; " << 0.0188487 << "; " << 5.1671047 << "; " << 1.6184687 << std::endl;
     }
   }
   return trajectory;

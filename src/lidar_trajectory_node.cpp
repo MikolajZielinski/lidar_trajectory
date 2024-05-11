@@ -30,7 +30,8 @@ LidarTrajectoryNode::LidarTrajectoryNode(const rclcpp::NodeOptions & options)
   subscription_odometry_ = this->create_subscription<Odometry>(
       "~/input/current_odometry", qos_policy, std::bind(&LidarTrajectoryNode::odometry_callback, this, std::placeholders::_1));
 
-  publisher_trajectory_ = this->create_publisher<Trajectory>("~/output/trajectory", qos_policy);
+  rclcpp::QoS qos{1};
+  publisher_trajectory_ = this->create_publisher<Trajectory>("~/output/trajectory", qos);
   timer_ = this->create_wall_timer(1s, std::bind(&LidarTrajectoryNode::on_timer, this));
 
   param_name_ = this->declare_parameter("param_name", 456);

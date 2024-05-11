@@ -35,7 +35,7 @@ def launch_setup(context, *args, **kwargs):
         remappings=[
             ('~/input/current_odometry', '/localization/kinematic_state'),
             ('~/input/laser_scan', '/sensing/lidar/scan'),
-            ('~/output/trajectory', '/planning/racing_planner/dummy_topic'),
+            ('~/output/trajectory',  LaunchConfiguration('output_trajectory_topic')),
         ],
         parameters=[
             param_path
@@ -58,6 +58,7 @@ def generate_launch_description():
         )
 
     add_launch_arg('lidar_trajectory_param_file', '')
+    add_launch_arg('output_trajectory_topic', 'racing_planner/trajectory')
 
     return LaunchDescription([
         *declared_arguments,

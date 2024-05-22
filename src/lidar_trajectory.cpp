@@ -57,13 +57,13 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     start_angle = start_angle - (M_PI / 2);
 
     std::vector<double> start_direction = {sin(-start_angle), cos(start_angle)};
-    std::vector<double> start_point = {odom.pose.pose.position.x, odom.pose.pose.position.y};
+    std::vector<double> start_point = {odom.pose.pose.position.x, -odom.pose.pose.position.y};
 
-    std::cout << "Start angle" << std::endl;
-    std::cout << start_angle << std::endl;
+    // std::cout << "Start angle" << std::endl;
+    // std::cout << start_angle << std::endl;
 
-    std::cout << "Start position" << std::endl;
-    std::cout << odom.pose.pose.position.x << " " << odom.pose.pose.position.y << std::endl;
+    // std::cout << "Start position" << std::endl;
+    // std::cout << odom.pose.pose.position.x << " " << odom.pose.pose.position.y << std::endl;
 
     // Read LaserScan data
     LaserScan laser = *this->laser_scan;
@@ -74,8 +74,8 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     }
     int num_points = int(distances.size());
     double scan_angle = laser.angle_increment;
-    std::cout << "Scan angle" << std::endl;
-    std::cout << scan_angle << std::endl;
+    // std::cout << "Scan angle" << std::endl;
+    // std::cout << scan_angle << std::endl;
     double offset_angle = (((M_PI * 2) / scan_angle) - num_points) / 2;
     double max_dist = laser.range_max;
 
@@ -393,8 +393,8 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     }
 
     // Smooth trajectory with Bezier curve
-    std::vector<std::vector<double>> path_right = LidarTrajectory::bezier_curve(turn_right_sections, 100);
-    std::reverse(path_right.begin(), path_right.end());
+    // std::vector<std::vector<double>> path_right = LidarTrajectory::bezier_curve(turn_right_sections, 100);
+    // std::reverse(path_right.begin(), path_right.end());
 
     // Reverse all sections
     std::vector<std::vector<double>> section_turn_left;
@@ -489,14 +489,32 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     }
 
     // Smooth trajectory with Bezier curve
-    std::vector<std::vector<double>> path_left = LidarTrajectory::bezier_curve(turn_left_sections, 30);
+    // std::cout << "######################################################################################################################################" << std::endl;
+    // for(int i=0; i<3; i++)
+    // {
+      
+    // }
+    
+    std::vector<std::vector<double>> path_left = LidarTrajectory::bezier_curve(turn_left_sections, 15);
+
+    // std::vector<std::vector<double>> path_left = turn_left_sections;
     std::reverse(path_left.begin(), path_left.end());
         
     // Print out the vector
-    // std::cout << "Path" << std::endl;
-    // for(auto n : path_left)
-    //   std::cout << " " << n[0] << " " << n[1] << " | ";
-    // std::cout << std::endl;
+    std::cout << "Input" << std::endl;
+    std::cout << "{";
+    for(auto n : turn_left_sections)
+      std::cout << "{" << n[0] << ", " << n[1] << "},";
+    std::cout << "}";
+    std::cout << std::endl;
+
+    // Print out the vector
+    std::cout << "Output" << std::endl;
+    std::cout << "{";
+    for(auto n : path_left)
+      std::cout << "{" << n[0] << ", " << n[1] << "},";
+    std::cout << "}";
+    std::cout << std::endl;
 
     // Populate the message
     trajectory.header = laser.header;
@@ -505,7 +523,7 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     for (auto & point : path_left) {
       TrajectoryPoint trajectory_point;
       Pose pose;
-      auto q = tier4_autoware_utils::createQuaternionFromYaw(-M_PI / 2); //TODO Calculate the angle
+      auto q = tier4_autoware_utils::createQuaternionFromYaw(start_angle + (M_PI/2)); //TODO Calculate the angle
       pose.position.x = point[0];
       pose.position.y = -point[1];
       pose.position.z = 0.0;
@@ -520,52 +538,49 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
       trajectory.points.push_back(trajectory_point);
 
       // std::cout << 0.0000000 << "; " << point[0] << "; " << point[1] << "; " << -M_PI / 2 << "; " << 0.0188487 << "; " << 5.1671047 << "; " << 1.6184687 << std::endl;
+      // std::cout << point[0] << "; " << point[1] << std::endl;
     }
   }
   return trajectory;
 }
 
-unsigned long long LidarTrajectory::comb(unsigned n, unsigned i)
+unsigned long long LidarTrajectory::comb(const unsigned n, const unsigned i)
 {
-  if (n == i || i == 0) {
-      return 1;
+  if (n == i || i == 0) 
+  {
+    return 1;
   }
   return comb(n - 1, i - 1) * n / i;
 }
 
-std::vector<double> LidarTrajectory::bernstein_poly(int i, int n, std::vector<double> t)
+std::vector<double> LidarTrajectory::bernstein_poly(int i, int n, const std::vector<double>& t)
 {
-  unsigned long long term1 = LidarTrajectory::comb(n, i);
+  unsigned long long term1 = comb(n, i);
   std::vector<double> term2;
-
   for(double val : t)
   {
     term2.push_back(std::pow(val, n - i));
   }
-
   std::vector<double> term3;
-
   for(double val : t)
   {
     term3.push_back(std::pow(1 - val, i));
   }
-
   std::vector<double> result;
-  for(int i=0; i<int(term2.size()); i++)
+  for(int i = 0; i < int(term2.size()); i++)
   {
     result.push_back(term1 * term2[i] * term3[i]);
   }
-
   return result;
 }
 
-std::vector<std::vector<double>> LidarTrajectory::bezier_curve(std::vector<std::vector<double>> points, int nTimes)
+std::vector<std::vector<double>> LidarTrajectory::bezier_curve(const std::vector<std::vector<double>>& points, const int nTimes)
 {
   int nPoints = int(points.size());
 
   std::vector<double> xPoints;
   std::vector<double> yPoints;
-  for(std::vector<double> point : points)
+  for(const std::vector<double>& point : points)
   {
     xPoints.push_back(point[0]);
     yPoints.push_back(point[1]);
@@ -573,47 +588,30 @@ std::vector<std::vector<double>> LidarTrajectory::bezier_curve(std::vector<std::
 
   std::vector<double> t;
   double delta = 1.0 / (nTimes - 1);
-  for(int i=0; i < nTimes-1; ++i)
-    {
-      t.push_back(delta * i);
-    }
+  for(int i = 0; i < nTimes - 1; ++i)
+  {
+    t.push_back(delta * i);
+  }
   t.push_back(1.0);
 
   std::vector<std::vector<double>> polynomial_array;
-  for(int i=0; i<nPoints; i++)
-  {
-    polynomial_array.push_back(LidarTrajectory::bernstein_poly(i, nPoints - 1, t));
+  for(int i = 0; i < nPoints; i++)
+  { 
+    polynomial_array.push_back(bernstein_poly(i, nPoints - 1, t));
   }
-
-  std::vector<double> xvals;
-  for(int i=0; i<nPoints; i++)
-  {
-    double sum = 0;
-    for(int j=0; j<nPoints; j++)
-    {
-      sum = sum + (xPoints[j] * polynomial_array[j][i]);
-    }
-    xvals.push_back(sum);
-  }
-
-  std::vector<double> yvals;
-  for(int i=0; i<nPoints; i++)
-  {
-    double sum = 0;
-    for(int j=0; j<nPoints; j++)
-    {
-      sum = sum + (yPoints[j] * polynomial_array[j][i]);
-    }
-    yvals.push_back(sum);
-  }
-  
   std::vector<std::vector<double>> result;
-  for(int i=0; i<nTimes; i++)
+  for (int i = 0; i < nTimes; i++)
   {
-    std::vector<double> point = {xvals[i], yvals[i]};
+    double xsum = 0;
+    double ysum = 0;
+    for (int j = 0; j < nPoints; j++)
+    {
+      xsum += xPoints[j] * polynomial_array[j][i];
+      ysum += yPoints[j] * polynomial_array[j][i];
+    }
+    std::vector<double> point = {xsum, ysum};
     result.push_back(point);
   }
-
   return result;
 }
 

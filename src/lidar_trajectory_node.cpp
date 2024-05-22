@@ -32,7 +32,7 @@ LidarTrajectoryNode::LidarTrajectoryNode(const rclcpp::NodeOptions & options)
 
   rclcpp::QoS qos{1};
   publisher_trajectory_ = this->create_publisher<Trajectory>("~/output/trajectory", qos);
-  timer_ = this->create_wall_timer(1s, std::bind(&LidarTrajectoryNode::on_timer, this));
+  timer_ = this->create_wall_timer(0.5s, std::bind(&LidarTrajectoryNode::on_timer, this));
 
   param_name_ = this->declare_parameter("param_name", 456);
   lidar_trajectory_->foo(param_name_);

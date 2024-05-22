@@ -50,9 +50,9 @@ public:
   Odometry::SharedPtr odometry;
 
   Trajectory calculate_trajectory(void);
-  unsigned long long comb(unsigned n, unsigned i);
-  std::vector<double> bernstein_poly(int i, int n, std::vector<double> t);
-  std::vector<std::vector<double>> bezier_curve(std::vector<std::vector<double>> points, int nTimes=100);
+  unsigned long long comb(const unsigned n, const unsigned i);
+  std::vector<double> bernstein_poly(int i, int n, const std::vector<double>& t);
+  std::vector<std::vector<double>> bezier_curve(const std::vector<std::vector<double>>& points, const int nTimes);
 
   int64_t foo(int64_t bar) const;
 };

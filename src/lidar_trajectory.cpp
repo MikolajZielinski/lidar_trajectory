@@ -41,11 +41,8 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
 
   if(this->laser_scan != nullptr && this->odometry != nullptr)
   {
-    // Read message data
-    // std::cout << "Calcualting trajectory" << std::endl;
-
     // Convert quaternion to RPY
-    Odometry odom = *this->odometry;
+    const Odometry odom = *this->odometry;
     Quaternion quat = odom.pose.pose.orientation;
     tf2::Quaternion tf_quaternion;
     tf2::fromMsg(quat, tf_quaternion);
@@ -59,25 +56,18 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     std::vector<double> start_direction = {sin(-start_angle), cos(start_angle)};
     std::vector<double> start_point = {odom.pose.pose.position.x, -odom.pose.pose.position.y};
 
-    // std::cout << "Start angle" << std::endl;
-    // std::cout << start_angle << std::endl;
-
-    // std::cout << "Start position" << std::endl;
-    // std::cout << odom.pose.pose.position.x << " " << odom.pose.pose.position.y << std::endl;
-
     // Read LaserScan data
-    LaserScan laser = *this->laser_scan;
-    std::vector<double> distances;
+    const LaserScan laser = *this->laser_scan;
+    std::vector<double> distances; // TODO remove outliers
     for(double range : laser.ranges)
     {
       distances.push_back(range);
     }
     int num_points = int(distances.size());
     double scan_angle = laser.angle_increment;
-    // std::cout << "Scan angle" << std::endl;
-    // std::cout << scan_angle << std::endl;
     double offset_angle = (((M_PI * 2) / scan_angle) - num_points) / 2;
-    double max_dist = laser.range_max;
+    // double max_dist = laser.range_max;
+    double max_dist = 5.0;
 
     // Convert lidar distances to x, y coordinates
     std::vector<std::vector<double>> coords;
@@ -96,6 +86,26 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
       }
     }
 
+    // Filter coords
+    std::vector<std::vector<double>> filtered_coords;
+    for(int i=1; i<int(coords.size() - 3); i++)
+    {
+      int j = i + 1;
+      int k = j + 1;
+
+      double dist_1 = std::hypot(coords[i][0] - coords[j][0], coords[i][1] - coords[j][1]);
+      double dist_2 = std::hypot(coords[j][0] - coords[k][0], coords[j][1] - coords[k][1]);
+      double dist_3 = std::hypot(coords[i][0] - coords[k][0], coords[i][1] - coords[k][1]);
+
+      if(dist_3 < dist_1 && dist_3 < dist_2 && (dist_1 > 0.05 || dist_2 > 0.05))
+      {
+        continue;
+      }
+
+      filtered_coords.push_back(coords[i]);
+    } 
+    coords = filtered_coords;
+
     class LineSegment
     {
       public:
@@ -106,7 +116,7 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     // Create point sections 
     std::vector<std::vector<LineSegment>> line_sections;
     std::vector<LineSegment> line_subsection;
-    float threshold = 0.3;
+    float threshold = 0.8;
     for(int i=0; i<int(coords.size()); i++)
     {
       int j = i + 1;
@@ -161,6 +171,15 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
         line_sections_reduced.push_back(line_subsection_reduced);
       }
     }
+
+    // Print sections lengths
+    int k = 0;
+    for(auto sec : line_sections)
+    {
+      std::cout << k << ". " << int(sec.size()) << std::endl;
+      k++;
+    }
+    std::cout << "#########################################################################################" << std::endl;
 
     // Calculate normal vectors
     float distance_from_border = 0.8;
@@ -384,17 +403,19 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
           }
         }
       }
-      turn_right_sections = std::vector<std::vector<double>>(turn_right_sections.begin(), turn_right_sections.end() - (int(turn_right_sections.size()) - smallest_idx1));
-      section_to_add = std::vector<std::vector<double>>(section_to_add.begin() + smallest_idx2, section_to_add.end());
-      for(std::vector<double> point : section_to_add)
-      {
-        turn_right_sections.push_back(point);
-      }
+      // turn_right_sections = std::vector<std::vector<double>>(turn_right_sections.begin(), turn_right_sections.end() - (int(turn_right_sections.size()) - smallest_idx1));
+      // section_to_add = std::vector<std::vector<double>>(section_to_add.begin() + smallest_idx2, section_to_add.end());
+      turn_right_sections.erase(turn_right_sections.begin() + smallest_idx1, turn_right_sections.end());
+      turn_right_sections.insert(turn_right_sections.end(), section_to_add.begin() + smallest_idx2, section_to_add.end());
+      // for(std::vector<double> point : section_to_add)
+      // {
+      //   turn_right_sections.push_back(point);
+      // }
     }
 
     // Smooth trajectory with Bezier curve
-    // std::vector<std::vector<double>> path_right = LidarTrajectory::bezier_curve(turn_right_sections, 100);
-    // std::reverse(path_right.begin(), path_right.end());
+    std::vector<std::vector<double>> path_right = LidarTrajectory::bezier_curve(turn_right_sections, 15);
+    std::reverse(path_right.begin(), path_right.end());
 
     // Reverse all sections
     std::vector<std::vector<double>> section_turn_left;
@@ -487,40 +508,31 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
         turn_left_sections.push_back(point);
       }
     }
-
-    // Smooth trajectory with Bezier curve
-    // std::cout << "######################################################################################################################################" << std::endl;
-    // for(int i=0; i<3; i++)
-    // {
-      
-    // }
     
     std::vector<std::vector<double>> path_left = LidarTrajectory::bezier_curve(turn_left_sections, 15);
-
-    // std::vector<std::vector<double>> path_left = turn_left_sections;
     std::reverse(path_left.begin(), path_left.end());
         
-    // Print out the vector
-    std::cout << "Input" << std::endl;
-    std::cout << "{";
-    for(auto n : turn_left_sections)
-      std::cout << "{" << n[0] << ", " << n[1] << "},";
-    std::cout << "}";
-    std::cout << std::endl;
+    // // Print out the vector
+    // std::cout << "Input" << std::endl;
+    // std::cout << "{";
+    // for(auto n : turn_left_sections)
+    //   std::cout << "{" << n[0] << ", " << n[1] << "},";
+    // std::cout << "}";
+    // std::cout << std::endl;
 
-    // Print out the vector
-    std::cout << "Output" << std::endl;
-    std::cout << "{";
-    for(auto n : path_left)
-      std::cout << "{" << n[0] << ", " << n[1] << "},";
-    std::cout << "}";
-    std::cout << std::endl;
+    // // Print out the vector
+    // std::cout << "Output" << std::endl;
+    // std::cout << "{";
+    // for(auto n : path_left)
+    //   std::cout << "{" << n[0] << ", " << n[1] << "},";
+    // std::cout << "}";
+    // std::cout << std::endl;
 
     // Populate the message
     trajectory.header = laser.header;
     trajectory.header.frame_id = "map";
 
-    for (auto & point : path_left) {
+    for (auto & point : path_right) {
       TrajectoryPoint trajectory_point;
       Pose pose;
       auto q = tier4_autoware_utils::createQuaternionFromYaw(start_angle + (M_PI/2)); //TODO Calculate the angle
@@ -531,14 +543,9 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
 
       trajectory_point.pose = pose;
 
-      trajectory_point.longitudinal_velocity_mps = 5.167099952697754; //TODO Better velocity estiomatoin
+      trajectory_point.longitudinal_velocity_mps = 1.0; // 5.167099952697754; //TODO Better velocity estiomatoin
 
-      // s_m; x_m; y_m; psi_rad; kappa_radpm; vx_mps; ax_mps2
-      // 0.0000000; -0.0097019; -0.5801947; -1.6151808; 0.0188487; 5.1671047; 1.6184687
       trajectory.points.push_back(trajectory_point);
-
-      // std::cout << 0.0000000 << "; " << point[0] << "; " << point[1] << "; " << -M_PI / 2 << "; " << 0.0188487 << "; " << 5.1671047 << "; " << 1.6184687 << std::endl;
-      // std::cout << point[0] << "; " << point[1] << std::endl;
     }
   }
   return trajectory;

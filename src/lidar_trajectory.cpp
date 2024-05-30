@@ -258,7 +258,7 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
       yd = -yd;
       
       double d1 = xd / std::hypot(xd, yd);
-      double d2 = xd / std::hypot(xd, yd);
+      double d2 = yd / std::hypot(xd, yd);
       double d3 = (x1 - x0) / std::hypot(x1 - x0, y1 - y0);
       double d4 = (y1 - y0) / std::hypot(x1 - x0, y1 - y0);
       double d5 = (x2 - x0) / std::hypot(x2 - x0, y2 - y0);
@@ -269,6 +269,9 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
       double dot2 = (d1 * d5) + (d2 * d6);
       double angle1 = (acos(std::min(std::max(dot1, -1.0), 1.0))) * (180.0 / M_PI);
       double angle2 = (acos(std::min(std::max(dot2, -1.0), 1.0))) * (180.0 / M_PI);
+
+      std::cout << "Angle 1: " << angle1 << std::endl;
+      std::cout << "Angle 2: " << angle2 << std::endl;
 
       if(angle1 <= 110)
       {
@@ -293,6 +296,8 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
       seg.value = 0;
       perimeter_points.push_back(seg);
     }
+
+    std::cout << perimeter_points[0].value << " " << perimeter_points[1].value << std::endl;
 
     // Find biggest traingle
     x0 = start_point[0];
@@ -321,8 +326,11 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
 
           double perimeter = std::hypot(x1, y1) + std::hypot(x2, y2) + std::hypot(x1 - x2, y1 - y2);
 
-          if(perimeter > biggest_perimeter)
+          std::cout << "Perimeter:" << perimeter << " " << point1.value << " " << point2.value << std::endl;
+
+          if(perimeter > biggest_perimeter + 0.001)
           {
+            std::cout << "Replace points!" << std::endl;
             biggest_perimeter = perimeter;
             biggest_perimeter_points = {point1, point2};
           }
@@ -333,6 +341,9 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     {
       biggest_perimeter_points = perimeter_points;
     }
+
+    std::cout << biggest_perimeter_points[0].value << " " << biggest_perimeter_points[1].value << std::endl;
+    std::cout << "######################################################################################################" << std::endl;
 
     // Choose closest path as first path
     x0 = start_point[0];

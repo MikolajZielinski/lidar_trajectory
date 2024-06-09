@@ -2,6 +2,8 @@
 <!-- Required -->
 <!-- Package description -->
 
+This is a packeage for trajectory planning with lidar data only.
+
 ## Installation
 <!-- Required -->
 <!-- Things to consider:
@@ -28,30 +30,24 @@ ros2 launch lidar_trajectory lidar_trajectory.launch.py
 <!-- Things to consider:
     - How do you use the package / API? -->
 
+<p align="center">
+  <img src="images/block_diagram.png" alt="Block diagram">
+</p>
+
 ### Input
 
 | Name         | Type                  | Description  |
 | ------------ | --------------------- | ------------ |
-| `topic_name` | std_msgs::msg::String | Sample desc. |
+| `/sensing/lidar/scan` | sensor_msgs::msg::LaserScan | Data from lidar |
+| `/localization/kinematic_state` | nav_msgs::msg::Odometry | Odometry |
 
 ### Output
 
 | Name         | Type                  | Description  |
 | ------------ | --------------------- | ------------ |
-| `topic_name` | std_msgs::msg::String | Sample desc. |
-
-### Services and Actions
-
-| Name           | Type                   | Description  |
-| -------------- | ---------------------- | ------------ |
-| `service_name` | std_srvs::srv::Trigger | Sample desc. |
-
-### Parameters
-
-| Name         | Type | Description  |
-| ------------ | ---- | ------------ |
-| `param_name` | int  | Sample desc. |
+| `/planning/racing_planner/trajectory` | autoware_auto_planning_msgs::msg::trajectory | Planned trajectory |
 
 
 ## References / External links
 <!-- Optional -->
+Pytohn implementation oh the underlaying algorithm: https://github.com/MikolajZielinski/Lidar-Trajectory-Planner

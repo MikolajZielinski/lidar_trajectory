@@ -172,15 +172,6 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
       }
     }
 
-    // Print sections lengths
-    int k = 0;
-    for(auto sec : line_sections)
-    {
-      std::cout << k << ". " << int(sec.size()) << std::endl;
-      k++;
-    }
-    std::cout << "#########################################################################################" << std::endl;
-
     // Calculate normal vectors
     float distance_from_border = 0.8;
     std::vector<std::vector<std::vector<double>>> normal_vectors_sections;
@@ -270,9 +261,6 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
       double angle1 = (acos(std::min(std::max(dot1, -1.0), 1.0))) * (180.0 / M_PI);
       double angle2 = (acos(std::min(std::max(dot2, -1.0), 1.0))) * (180.0 / M_PI);
 
-      std::cout << "Angle 1: " << angle1 << std::endl;
-      std::cout << "Angle 2: " << angle2 << std::endl;
-
       if(angle1 <= 110)
       {
         LineSegment seg;
@@ -296,8 +284,6 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
       seg.value = 0;
       perimeter_points.push_back(seg);
     }
-
-    std::cout << perimeter_points[0].value << " " << perimeter_points[1].value << std::endl;
 
     // Find biggest traingle
     x0 = start_point[0];
@@ -326,11 +312,8 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
 
           double perimeter = std::hypot(x1, y1) + std::hypot(x2, y2) + std::hypot(x1 - x2, y1 - y2);
 
-          std::cout << "Perimeter:" << perimeter << " " << point1.value << " " << point2.value << std::endl;
-
           if(perimeter > biggest_perimeter + 0.001)
           {
-            std::cout << "Replace points!" << std::endl;
             biggest_perimeter = perimeter;
             biggest_perimeter_points = {point1, point2};
           }
@@ -341,9 +324,6 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     {
       biggest_perimeter_points = perimeter_points;
     }
-
-    std::cout << biggest_perimeter_points[0].value << " " << biggest_perimeter_points[1].value << std::endl;
-    std::cout << "######################################################################################################" << std::endl;
 
     // Choose closest path as first path
     x0 = start_point[0];
@@ -522,28 +502,12 @@ Trajectory LidarTrajectory::calculate_trajectory(void)
     
     std::vector<std::vector<double>> path_left = LidarTrajectory::bezier_curve(turn_left_sections, 15);
     std::reverse(path_left.begin(), path_left.end());
-        
-    // // Print out the vector
-    // std::cout << "Input" << std::endl;
-    // std::cout << "{";
-    // for(auto n : turn_left_sections)
-    //   std::cout << "{" << n[0] << ", " << n[1] << "},";
-    // std::cout << "}";
-    // std::cout << std::endl;
-
-    // // Print out the vector
-    // std::cout << "Output" << std::endl;
-    // std::cout << "{";
-    // for(auto n : path_left)
-    //   std::cout << "{" << n[0] << ", " << n[1] << "},";
-    // std::cout << "}";
-    // std::cout << std::endl;
 
     // Populate the message
     trajectory.header = laser.header;
     trajectory.header.frame_id = "map";
 
-    for (auto & point : path_right) {
+    for (auto & point : path_left) {
       TrajectoryPoint trajectory_point;
       Pose pose;
       auto q = tier4_autoware_utils::createQuaternionFromYaw(start_angle + (M_PI/2)); //TODO Calculate the angle
